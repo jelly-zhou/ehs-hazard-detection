@@ -95,7 +95,6 @@ class RiskEngine:
             
             processed_hazards.append(processed_hazard)
         
-        # Sort by risk score (descending)
         processed_hazards.sort(key=lambda x: x["risk_score"], reverse=True)
         
         return processed_hazards

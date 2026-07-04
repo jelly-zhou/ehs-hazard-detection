@@ -1,1 +1,1 @@
-"""Modules package"""
+"""EHS Detection Modules Package"""

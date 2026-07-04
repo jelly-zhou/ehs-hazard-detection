@@ -25,7 +25,6 @@ class HazardDetector:
             with open(path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except FileNotFoundError:
-            # Fallback to minimal hazard set
             return {
                 "hazard_categories": [
                     {
@@ -57,11 +56,9 @@ class HazardDetector:
         """
         detected_hazards = []
         
-        # Analyze image characteristics
         width, height = image.size
         image_data = self._analyze_image(image)
         
-        # Rule-based detection logic
         hazard_rules = {
             "dark_areas": {"hazard": "PPE_VIOLATION", "confidence": 0.72},
             "clutter": {"hazard": "HOUSEKEEPING_HAZARD", "confidence": 0.65},
@@ -69,7 +66,6 @@ class HazardDetector:
             "machinery_shapes": {"hazard": "MACHINERY_HAZARD", "confidence": 0.68},
         }
         
-        # Apply detection rules
         for feature, rule in hazard_rules.items():
             if image_data.get(feature, False):
                 if rule["confidence"] > self.confidence_threshold:
@@ -79,7 +75,6 @@ class HazardDetector:
                     )
                     detected_hazards.append(hazard)
         
-        # Probabilistic detection (simulate multiple hazards per image)
         if random.random() > 0.6:
             additional_hazard = self._create_random_hazard()
             detected_hazards.append(additional_hazard)
@@ -91,25 +86,21 @@ class HazardDetector:
         Analyze image characteristics for rule-based detection
         Returns dict of detected features
         """
-        # Convert to RGB if needed
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
         pixels = list(image.getdata())
-        
-        # Calculate statistics
         brightness = sum([sum(p[:3]) / 3 for p in pixels]) / len(pixels) if pixels else 128
         
         return {
             "dark_areas": brightness < 100,
-            "clutter": len(pixels) > 100000,  # Large image = likely cluttered
+            "clutter": len(pixels) > 100000,
             "bright_spots": brightness > 180,
-            "machinery_shapes": True  # Assume industrial setting
+            "machinery_shapes": True
         }
     
     def _create_hazard_detection(self, hazard_id: str, confidence: float) -> Dict:
         """Create hazard detection object"""
-        # Find hazard in library
         hazard_template = None
         for cat in self.hazards.get("hazard_categories", []):
             if cat["id"] == hazard_id:
@@ -131,7 +122,7 @@ class HazardDetector:
             "confidence": round(confidence, 2),
             "severity": hazard_template["default_severity"],
             "probability": hazard_template["default_probability"],
-            "bounding_box": None,  # MVP - no actual bounding boxes
+            "bounding_box": None,
             "timestamp": None
         }
     
