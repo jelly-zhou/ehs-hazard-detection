@@ -5,7 +5,6 @@ Implements ISO 45001 risk matrix logic.
 """
 
 from typing import Dict, List
-import json
 
 
 class RiskEngine:

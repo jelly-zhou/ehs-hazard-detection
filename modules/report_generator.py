@@ -5,7 +5,6 @@ Generates structured EHS inspection reports.
 
 from typing import Dict, List
 from datetime import datetime
-import json
 
 
 class ReportGenerator:
