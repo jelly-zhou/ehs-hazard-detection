@@ -32,7 +32,7 @@ if uploaded_file:
 
     # 读取图片
     image = Image.open(uploaded_file)
-  image = Image.open(uploaded_file).convert("RGB")
+    image = Image.open(uploaded_file).convert("RGB")
 st.image(image, caption="Inspection Image")
     st.success("Running AI-EHS analysis...")
 
