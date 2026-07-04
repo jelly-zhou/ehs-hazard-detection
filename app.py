@@ -1,19 +1,22 @@
 import streamlit as st
 from PIL import Image
 
-# ====== OOP模块（关键修复点）======
+# ====== OOP模块 ======
 from modules.vision_detection import HazardDetector
 from modules.risk_engine import RiskEngine
 from modules.control_generator import ControlGenerator
 from modules.report_generator import ReportGenerator
 
+# =========================
+# 页面配置
+# =========================
 st.set_page_config(page_title="EHS Smart Inspection", layout="wide")
 
 st.title("🏭 AI-Powered EHS Smart Inspection System")
 st.write("Industrial Safety Inspection Platform (ISO 45001 Aligned)")
 
 # =========================
-# 初始化系统（关键）
+# 初始化系统（只初始化一次更安全）
 # =========================
 detector = HazardDetector()
 risk_engine = RiskEngine()
@@ -28,63 +31,71 @@ uploaded_file = st.file_uploader(
     type=["jpg", "png", "jpeg"]
 )
 
+# =========================
+# 主流程
+# =========================
 if uploaded_file:
 
-    # 读取图片
-    image = Image.open(uploaded_file)
-    image = Image.open(uploaded_file).convert("RGB")
-st.image(image, caption="Inspection Image")
-    st.success("Running AI-EHS analysis...")
+    try:
+        # 1. 读取图片（强制RGB防炸）
+        image = Image.open(uploaded_file).convert("RGB")
 
-    # =========================
-    # 1. Hazard Detection
-    # =========================
-    hazards = detector.detect_hazards(image)
+        st.image(image, caption="Inspection Image")
 
-    st.subheader("🚨 Detected Hazards")
+        st.success("Running AI-EHS analysis...")
 
-    if not hazards:
-        st.info("No hazards detected.")
-    else:
-        for h in hazards:
-            st.write(h)
+        # =========================
+        # 2. Hazard Detection
+        # =========================
+        hazards = detector.detect_hazards(image)
 
-    # =========================
-    # 2. Risk Analysis
-    # =========================
-    processed_risks = risk_engine.process_hazards(hazards)
+        st.subheader("🚨 Detected Hazards")
 
-    st.subheader("📊 Risk Assessment")
+        if hazards:
+            for h in hazards:
+                st.write(h)
+        else:
+            st.info("No hazards detected.")
 
-    if not processed_risks:
-        st.info("No risk data generated.")
-    else:
-        for r in processed_risks:
-            st.write(r)
+        # =========================
+        # 3. Risk Analysis
+        # =========================
+        processed_risks = risk_engine.process_hazards(hazards)
 
-    # =========================
-    # 3. Control Measures
-    # =========================
-    controls = control_generator.generate_all_controls(processed_risks)
+        st.subheader("📊 Risk Assessment")
 
-    st.subheader("🛠 Control Measures")
+        if processed_risks:
+            for r in processed_risks:
+                st.write(r)
+        else:
+            st.info("No risk data generated.")
 
-    if not controls:
-        st.info("No control measures generated.")
-    else:
-        for c in controls:
-            st.write(c)
+        # =========================
+        # 4. Control Measures
+        # =========================
+        controls = control_generator.generate_all_controls(processed_risks)
 
-    # =========================
-    # 4. Report Generation
-    # =========================
-    risk_summary = risk_engine.get_risk_summary(processed_risks)
+        st.subheader("🛠 Control Measures")
 
-    report = report_generator.generate_report(
-        risk_summary,
-        processed_risks,
-        controls
-    )
+        if controls:
+            for c in controls:
+                st.write(c)
+        else:
+            st.info("No control measures generated.")
 
-    st.subheader("📄 EHS Report")
-    st.text(report)
+        # =========================
+        # 5. Report Generation
+        # =========================
+        risk_summary = risk_engine.get_risk_summary(processed_risks)
+
+        report = report_generator.generate_report(
+            risk_summary,
+            processed_risks,
+            controls
+        )
+
+        st.subheader("📄 EHS Report")
+        st.text(report)
+
+    except Exception as e:
+        st.error(f"Error occurred: {str(e)}")
