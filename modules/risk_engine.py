@@ -18,37 +18,15 @@ class RiskEngine:
         "CRITICAL": {"range": (16, 25), "color": "red", "action": "Eliminate"}
     }
     
-    def __init__(self, hazard_library_path: str = "data/hazard_dataset.json"):
-        self.hazard_library = self._load_library(hazard_library_path)
-    
-    def _load_library(self, path: str) -> Dict:
-        """Load hazard library"""
-        try:
-            with open(path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            return {"hazard_categories": []}
+    def __init__(self):
+        pass
     
     def calculate_risk_score(self, severity: int, probability: int) -> int:
-        """
-        Calculate risk score: Severity × Probability
-        
-        Args:
-            severity: 1-5 (Impact level)
-            probability: 1-5 (Likelihood)
-        
-        Returns:
-            Risk score (1-25)
-        """
+        """Calculate risk score: Severity × Probability"""
         return severity * probability
     
     def classify_risk(self, risk_score: int) -> Dict:
-        """
-        Classify risk level based on score
-        
-        Returns:
-            Dict with classification details
-        """
+        """Classify risk level based on score"""
         for level, config in self.RISK_LEVELS.items():
             score_range = config["range"]
             if score_range[0] <= risk_score <= score_range[1]:
@@ -59,24 +37,10 @@ class RiskEngine:
                     "action": config["action"],
                     "range": score_range
                 }
-        
-        return {
-            "level": "UNKNOWN",
-            "score": risk_score,
-            "color": "gray",
-            "action": "Review"
-        }
+        return {"level": "UNKNOWN", "score": risk_score, "color": "gray", "action": "Review"}
     
     def process_hazards(self, detected_hazards: List[Dict]) -> List[Dict]:
-        """
-        Process detected hazards and assign risk scores
-        
-        Args:
-            detected_hazards: List of hazard detections
-        
-        Returns:
-            List of hazards with risk classification
-        """
+        """Process detected hazards and assign risk scores"""
         processed_hazards = []
         
         for hazard in detected_hazards:
@@ -92,11 +56,9 @@ class RiskEngine:
                 "risk_color": risk_classification["color"],
                 "action": risk_classification["action"]
             }
-            
             processed_hazards.append(processed_hazard)
         
         processed_hazards.sort(key=lambda x: x["risk_score"], reverse=True)
-        
         return processed_hazards
     
     def get_risk_summary(self, processed_hazards: List[Dict]) -> Dict:
@@ -112,13 +74,7 @@ class RiskEngine:
                 "max_risk_score": 0
             }
         
-        level_counts = {
-            "CRITICAL": 0,
-            "HIGH": 0,
-            "MEDIUM": 0,
-            "LOW": 0
-        }
-        
+        level_counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
         risk_scores = []
         
         for hazard in processed_hazards:
@@ -136,29 +92,3 @@ class RiskEngine:
             "average_risk_score": round(sum(risk_scores) / len(risk_scores), 2),
             "max_risk_score": max(risk_scores) if risk_scores else 0
         }
-
-
-class RiskMatrix:
-    """Risk matrix for visualization"""
-    
-    @staticmethod
-    def get_matrix_data(processed_hazards: List[Dict]) -> Dict:
-        """
-        Generate data for risk matrix visualization
-        
-        Returns:
-            Dict suitable for plotting
-        """
-        matrix = {}
-        
-        for severity in range(1, 6):
-            matrix[severity] = {}
-            for probability in range(1, 6):
-                matrix[severity][probability] = 0
-        
-        for hazard in processed_hazards:
-            severity = hazard.get("severity", 3)
-            probability = hazard.get("probability", 3)
-            matrix[severity][probability] += 1
-        
-        return matrix

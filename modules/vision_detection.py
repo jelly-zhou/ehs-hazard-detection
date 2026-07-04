@@ -5,10 +5,8 @@ MVP uses simulated detection based on image analysis and predefined rules.
 """
 
 import json
-import base64
 from typing import List, Dict, Tuple
 from PIL import Image
-import io
 import random
 
 
@@ -27,65 +25,34 @@ class HazardDetector:
         except FileNotFoundError:
             return {
                 "hazard_categories": [
-                    {
-                        "id": "PPE_VIOLATION",
-                        "name": "Personal Protective Equipment Violation",
-                        "default_severity": 4,
-                        "default_probability": 5
-                    },
-                    {
-                        "id": "FIRE_HAZARD",
-                        "name": "Fire Hazard",
-                        "default_severity": 5,
-                        "default_probability": 2
-                    }
+                    {"id": "PPE_VIOLATION", "name": "PPE Violation", "default_severity": 4, "default_probability": 5},
+                    {"id": "FIRE_HAZARD", "name": "Fire Hazard", "default_severity": 5, "default_probability": 2}
                 ]
             }
     
-    def detect_hazards(self, image: Image.Image, image_description: str = None) -> List[Dict]:
-        """
-        Simulate hazard detection from factory image.
-        MVP uses rule-based detection based on image characteristics.
-        
-        Args:
-            image: PIL Image object
-            image_description: Optional user-provided description
-        
-        Returns:
-            List of detected hazards with confidence scores
-        """
+    def detect_hazards(self, image: Image.Image) -> List[Dict]:
+        """Simulate hazard detection from factory image."""
         detected_hazards = []
-        
-        width, height = image.size
         image_data = self._analyze_image(image)
         
         hazard_rules = {
             "dark_areas": {"hazard": "PPE_VIOLATION", "confidence": 0.72},
             "clutter": {"hazard": "HOUSEKEEPING_HAZARD", "confidence": 0.65},
             "bright_spots": {"hazard": "FIRE_HAZARD", "confidence": 0.58},
-            "machinery_shapes": {"hazard": "MACHINERY_HAZARD", "confidence": 0.68},
         }
         
         for feature, rule in hazard_rules.items():
-            if image_data.get(feature, False):
-                if rule["confidence"] > self.confidence_threshold:
-                    hazard = self._create_hazard_detection(
-                        rule["hazard"],
-                        rule["confidence"]
-                    )
-                    detected_hazards.append(hazard)
+            if image_data.get(feature, False) and rule["confidence"] > self.confidence_threshold:
+                hazard = self._create_hazard_detection(rule["hazard"], rule["confidence"])
+                detected_hazards.append(hazard)
         
         if random.random() > 0.6:
-            additional_hazard = self._create_random_hazard()
-            detected_hazards.append(additional_hazard)
+            detected_hazards.append(self._create_random_hazard())
         
         return detected_hazards
     
     def _analyze_image(self, image: Image.Image) -> Dict:
-        """
-        Analyze image characteristics for rule-based detection
-        Returns dict of detected features
-        """
+        """Analyze image characteristics for rule-based detection"""
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
@@ -96,7 +63,6 @@ class HazardDetector:
             "dark_areas": brightness < 100,
             "clutter": len(pixels) > 100000,
             "bright_spots": brightness > 180,
-            "machinery_shapes": True
         }
     
     def _create_hazard_detection(self, hazard_id: str, confidence: float) -> Dict:
@@ -108,12 +74,7 @@ class HazardDetector:
                 break
         
         if not hazard_template:
-            hazard_template = {
-                "id": hazard_id,
-                "name": "Unknown Hazard",
-                "default_severity": 3,
-                "default_probability": 3
-            }
+            hazard_template = {"id": hazard_id, "name": "Unknown", "default_severity": 3, "default_probability": 3}
         
         return {
             "hazard_id": hazard_id,
@@ -134,15 +95,7 @@ class HazardDetector:
         
         random_category = random.choice(categories)
         confidence = round(random.uniform(0.55, 0.95), 2)
-        
         return self._create_hazard_detection(random_category["id"], confidence)
-    
-    def get_hazard_by_id(self, hazard_id: str) -> Dict:
-        """Get full hazard information"""
-        for cat in self.hazards.get("hazard_categories", []):
-            if cat["id"] == hazard_id:
-                return cat
-        return None
 
 
 class ImageProcessor:
@@ -153,10 +106,8 @@ class ImageProcessor:
         """Validate uploaded image"""
         if image.size[0] < 100 or image.size[1] < 100:
             return False, "Image too small (minimum 100x100)"
-        
         if image.size[0] > 4000 or image.size[1] > 4000:
             return False, "Image too large (maximum 4000x4000)"
-        
         return True, "Image valid"
     
     @staticmethod
